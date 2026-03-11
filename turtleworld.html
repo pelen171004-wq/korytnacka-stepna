@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐢 Korytnačka stepná – Testudo horsfieldii</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--moss:#2d4a1e;--forest:#3d6a28;--leaf:#5a9a38;--sage:#8ab87a;--cream:#f5f0e5;--earth:#4a3820;--shell:#c8a85a;--water:#4a8aaa;--card:#ffffff;--card-border:rgba(0,0,0,0.05);--input-bg:#ffffff;--input-border:#e8e8e8;--stat-bg:#f5f2ea;--muted:#888;--sub:#aaa;--bark:#8a6a3a}
+body.dark{--cream:#131d0d;--earth:#c8d8a8;--card:#1c2a12;--card-border:rgba(255,255,255,0.07);--input-bg:#172010;--input-border:#364e22;--stat-bg:#172010;--muted:#5a7a48;--sub:#4a6a38;--bark:#c8a870}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--cream);color:var(--earth);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;transition:background .3s,color .3s}
+body::before{content:'';position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.035'/%3E%3C/svg%3E");pointer-events:none;z-index:0}
+
+/* LOADER */
+#loader{position:fixed;inset:0;background:linear-gradient(160deg,#1a3510,#2d5a1e);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .7s}
+#loader.gone{opacity:0;pointer-events:none}
+.ldr-turtle{font-size:80px;animation:ldrB 1s ease-in-out infinite}
+@keyframes ldrB{0%,100%{transform:translateY(0) rotate(-5deg)}50%{transform:translateY(-18px) rotate(5deg)}}
+.ldr-bar{width:200px;height:4px;background:rgba(255,255,255,.15);border-radius:4px;margin-top:22px;overflow:hidden}
+.ldr-fill{height:100%;background:linear-gradient(90deg,#5a9a38,#c8a85a);animation:ldrF 1.8s ease forwards}
+@keyframes ldrF{from{width:0}to{width:100%}}
+
+/* NOTIFY */
+#notify{display:none;position:fixed;bottom:20px;right:20px;z-index:500;background:var(--moss);color:white;border-radius:16px;padding:15px 18px;max-width:290px;box-shadow:0 8px 30px rgba(0,0,0,.3);animation:slideIn .4s ease}
+@keyframes slideIn{from{transform:translateX(120%);opacity:0}to{transform:translateX(0);opacity:1}}
+body.dark #notify{background:#243018;border:1px solid #3a5025}
+
+/* HERO */
+.hero{background:linear-gradient(160deg,var(--moss) 0%,var(--forest) 50%,#1a3510 100%);padding:48px 20px 78px;text-align:center;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:58px;background:var(--cream);clip-path:ellipse(55% 100% at 50% 100%);transition:background .3s}
+.hero-badge{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.2);color:var(--sage);font-size:11px;letter-spacing:3px;text-transform:uppercase;padding:6px 16px;border-radius:30px;margin-bottom:20px;backdrop-filter:blur(8px)}
+.hero h1{font-family:'Playfair Display',serif;font-size:clamp(36px,7vw,64px);color:#fff;line-height:1;font-weight:900;margin-bottom:12px}
+.hero h1 em{color:var(--shell);font-style:italic}
+.hero p{color:rgba(255,255,255,.65);font-size:15px;max-width:420px;margin:0 auto 24px;line-height:1.6;font-weight:300}
+.hero-turtle{font-size:clamp(68px,12vw,108px);display:block;margin-bottom:14px;animation:float 4s ease-in-out infinite}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-12px)}}
+#dark-btn{position:absolute;top:16px;right:16px;background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.2);color:white;border-radius:50%;width:42px;height:42px;font-size:19px;cursor:pointer;backdrop-filter:blur(8px);z-index:10;line-height:42px;transition:all .3s}
+
+/* COUNTER */
+.cbox{display:inline-block;background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.18);border-radius:20px;padding:14px 24px;backdrop-filter:blur(12px);margin-top:4px}
+#days-count{font-family:'Playfair Display',serif;font-size:40px;font-weight:900;color:var(--shell);line-height:1}
+
+/* TABS */
+.nav-tabs{display:flex;justify-content:center;gap:7px;padding:26px 14px 0;flex-wrap:wrap;position:relative;z-index:1}
+.tab-btn{background:var(--card);border:2px solid transparent;border-radius:50px;padding:8px 16px;font-family:'DM Sans',sans-serif;font-size:13px;font-weight:500;color:var(--muted);cursor:pointer;transition:all .25s;box-shadow:0 2px 8px rgba(0,0,0,.07)}
+.tab-btn:hover{border-color:var(--leaf);color:var(--forest)}
+.tab-btn.active{background:var(--moss);color:white;border-color:var(--moss);box-shadow:0 4px 18px rgba(45,74,30,.35)}
+body.dark .tab-btn{background:var(--card)}
+body.dark .tab-btn.active{background:var(--leaf)}
+
+/* SECTIONS */
+.section{display:none;padding:34px 20px 70px;max-width:900px;margin:0 auto;animation:fadeUp .4s ease;position:relative;z-index:1}
+.section.active{display:block}
+@keyframes fadeUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:translateY(0)}}
+.section-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--moss);margin-bottom:5px;font-weight:700}
+body.dark .section-title{color:var(--sage)}
+.section-sub{color:var(--sub);font-size:13px;margin-bottom:26px;font-weight:300}
+
+/* CARDS */
+.card{background:var(--card);border-radius:20px;box-shadow:0 4px 18px rgba(0,0,0,.07);border:1px solid var(--card-border);transition:background .3s}
+.cp{padding:22px}
+
+/* SPECIES */
+.species-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.species-card{background:var(--card);border-radius:22px;overflow:hidden;cursor:pointer;box-shadow:0 4px 18px rgba(0,0,0,.07);transition:transform .25s,box-shadow .25s;border:1px solid var(--card-border)}
+.species-card:hover{transform:translateY(-5px);box-shadow:0 12px 36px rgba(0,0,0,.14)}
+.sp-name{font-family:'Playfair Display',serif;font-size:16px;font-weight:700;color:var(--earth);margin-bottom:3px}
+body.dark .sp-name{color:#c8e0a8}
+.sp-latin{font-size:11px;color:var(--muted);font-style:italic}
+.sp-foot{border-top:1px solid var(--card-border);padding:11px 16px;display:flex;justify-content:space-between;align-items:center}
+
+.feat{background:linear-gradient(135deg,#2d4a1e 0%,#5a8a30 60%,#c8a840 100%);border-radius:26px;padding:26px;margin-bottom:22px;cursor:pointer;display:flex;align-items:center;gap:22px;box-shadow:0 8px 36px rgba(45,74,30,.35);transition:transform .25s;position:relative;overflow:hidden}
+.feat::before{content:'🐢';position:absolute;top:-28px;right:-16px;font-size:140px;opacity:.1;pointer-events:none}
+.feat:hover{transform:translateY(-3px)}
+
+/* MODAL */
+.modal-ov{display:none;position:fixed;inset:0;background:rgba(10,20,5,.78);z-index:200;backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px}
+.modal-ov.open{display:flex}
+.modal{background:var(--cream);border-radius:26px;max-width:480px;width:100%;overflow:hidden;animation:mIn .3s cubic-bezier(.34,1.56,.64,1)}
+body.dark .modal{background:var(--card)}
+@keyframes mIn{from{opacity:0;transform:scale(.88)}to{opacity:1;transform:scale(1)}}
+.m-close{position:absolute;top:13px;right:13px;background:rgba(0,0,0,.1);border:none;width:32px;height:32px;border-radius:50%;font-size:15px;cursor:pointer;color:#666;line-height:32px}
+.irow{background:var(--card);border-radius:12px;padding:11px 15px;margin-bottom:7px;display:flex;justify-content:space-between;align-items:center}
+.irow-label{font-size:12px;color:var(--muted)}
+.irow-val{font-size:13px;font-weight:600;color:var(--earth)}
+body.dark .irow-val{color:#c8e0a8}
+
+/* GALLERY */
+.gal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:13px}
+.gal-card{border-radius:16px;height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:transform .25s;overflow:hidden;position:relative}
+.gal-card:hover{transform:scale(1.04)}
+.gal-card img{width:100%;height:100%;object-fit:cover}
+.gal-label{font-size:12px;font-weight:600;color:white;margin-top:7px;text-shadow:0 1px 4px rgba(0,0,0,.3)}
+.gal-upload{background:var(--card);border:2px dashed var(--sage);border-radius:16px;height:155px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
+.gal-upload:hover{background:var(--stat-bg,#f5f2ea);border-color:var(--leaf)}
+.user-pw{position:relative}
+.pdel{position:absolute;top:6px;right:6px;background:rgba(200,40,40,.82);color:white;border:none;border-radius:50%;width:24px;height:24px;font-size:12px;cursor:pointer;display:none;align-items:center;justify-content:center}
+.user-pw:hover .pdel{display:flex}
+
+/* CARE */
+.care-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:13px}
+.care-card{background:var(--card);border-radius:16px;padding:18px;box-shadow:0 2px 9px rgba(0,0,0,.05);border-left:4px solid var(--leaf);transition:transform .2s}
+.care-card:hover{transform:translateY(-3px)}
+body.dark .care-card{background:var(--card)}
+.c-title{font-weight:700;font-size:14px;color:var(--earth)}
+body.dark .c-title{color:#c8e0a8}
+.c-desc{font-size:12px;color:var(--muted);line-height:1.6;margin-top:5px}
+.pbadge{font-size:10px;padding:2px 8px;border-radius:20px;font-weight:700}
+.ph{background:#fde8e8;color:#c0392b}.pm{background:#fef3d0;color:#c07800}.pl{background:#dceeff;color:#1a6090}
+
+/* QUIZ */
+.qopt{background:var(--card);border:2px solid var(--card-border);border-radius:13px;padding:13px 16px;cursor:pointer;font-size:14px;color:var(--earth);text-align:left;transition:all .2s;font-family:'DM Sans',sans-serif;width:100%;margin-bottom:9px}
+.qopt:hover:not(:disabled){border-color:var(--sage);background:var(--stat-bg,#f5f2ea)}
+.qopt.correct{background:#e0f5e0;border-color:#4aaa4a;color:#1e5a1e;font-weight:600}
+.qopt.wrong{background:#fde0e0;border-color:#e04a4a;color:#8a1e1e}
+body.dark .qopt{background:var(--card);border-color:var(--input-border,#364e22);color:#c8e0a8}
+.qnext,.qrestart{background:var(--moss);color:white;border:none;border-radius:13px;padding:13px 28px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.qnext:hover,.qrestart:hover{background:var(--forest);transform:translateY(-2px)}
+.qnext{display:none}.qnext.vis{display:inline-block}
+.qscore{text-align:center;padding:36px 16px;display:none}.qscore.vis{display:block}
+
+/* ENTRIES */
+.ecard{background:var(--card);border-radius:16px;padding:18px 20px;margin-bottom:11px;box-shadow:0 2px 9px rgba(0,0,0,.06);border-left:5px solid var(--leaf);animation:fadeUp .3s ease;position:relative}
+.eq{display:inline-block;color:white;font-size:10px;font-weight:700;letter-spacing:1px;padding:3px 9px;border-radius:20px;margin-bottom:9px}
+.edate{font-size:12px;color:var(--muted);margin-left:7px}
+.estats{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:7px}
+.estat{background:var(--stat-bg,#f5f2ea);border-radius:9px;padding:5px 11px;font-size:12px;font-weight:600;color:var(--earth)}
+body.dark .estat{color:#c8e0a8}
+.enote{font-size:12px;color:var(--muted);line-height:1.6;font-style:italic;border-top:1px solid var(--card-border);padding-top:7px;margin-top:5px}
+.edel{position:absolute;top:13px;right:13px;background:#fde8e8;border:none;border-radius:7px;padding:3px 8px;font-size:11px;color:#c0392b;cursor:pointer;font-weight:600}
+body.dark .edel{background:#3a1a1a;color:#e07070}
+.empty{text-align:center;padding:40px 16px;color:var(--muted)}
+.empty div:first-child{font-size:48px;margin-bottom:9px}
+
+/* INPUTS */
+.inp{width:100%;border:2px solid var(--input-border,#e8e8e8);border-radius:11px;padding:9px 13px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--earth);outline:none;background:var(--input-bg,#fff);transition:border .2s}
+.inp:focus{border-color:var(--leaf)}
+textarea.inp{resize:vertical}
+select.inp{cursor:pointer}
+.lbl{font-size:11px;color:var(--muted);font-weight:700;letter-spacing:1.5px;text-transform:uppercase;display:block;margin-bottom:5px}
+.fg{display:grid;gap:13px;margin-bottom:13px}
+.g2{grid-template-columns:1fr 1fr}.g3{grid-template-columns:1fr 1fr 1fr}
+
+/* BTNS */
+.btn-p{background:linear-gradient(135deg,var(--moss),var(--forest));color:white;border:none;border-radius:12px;padding:12px 26px;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s;box-shadow:0 4px 14px rgba(45,74,30,.3)}
+.btn-p:hover{transform:translateY(-2px)}
+.btn-s{background:var(--stat-bg,#f5f2ea);color:var(--earth);border:2px solid var(--card-border);border-radius:12px;padding:10px 20px;font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;transition:all .2s}
+.btn-s:hover{border-color:var(--leaf);color:var(--forest)}
+body.dark .btn-s{background:var(--card);color:#c8e0a8;border-color:var(--input-border,#364e22)}
+
+/* SEARCH */
+.sbar{display:flex;gap:9px;margin-bottom:16px;flex-wrap:wrap}
+.chips{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.chip{background:var(--stat-bg,#f5f2ea);border:2px solid var(--card-border);border-radius:20px;padding:4px 13px;font-size:12px;font-weight:600;cursor:pointer;color:var(--muted);transition:all .2s}
+.chip.active{background:var(--moss);color:white;border-color:var(--moss)}
+body.dark .chip{background:var(--card);border-color:var(--input-border,#364e22)}
+body.dark .chip.active{background:var(--leaf)}
+
+/* CHART */
+.chart-btns{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+.cbtn{background:var(--stat-bg,#f5f2ea);color:var(--muted);border:none;border-radius:20px;padding:5px 14px;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;transition:all .2s}
+.cbtn.active{background:var(--moss);color:white}
+
+/* FAQ */
+.faq-cat{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--leaf);font-weight:700;margin:22px 0 9px}
+.faq-item{background:var(--card);border-radius:14px;margin-bottom:9px;overflow:hidden;box-shadow:0 2px 7px rgba(0,0,0,.05)}
+.faq-q{padding:16px 18px;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px;color:var(--earth);transition:background .2s;gap:10px}
+body.dark .faq-q{color:#c8e0a8}
+.faq-q:hover{background:var(--stat-bg,#f5f2ea)}
+.arrow{transition:transform .3s;font-size:11px;color:var(--muted);flex-shrink:0}
+.faq-item.open .arrow{transform:rotate(180deg)}
+.faq-a{max-height:0;overflow:hidden;transition:max-height .4s ease,padding .3s}
+.faq-item.open .faq-a{max-height:400px;padding:0 18px 16px}
+.faq-a p{font-size:13px;color:var(--muted);line-height:1.75}
+
+/* CAL */
+.cal-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:13px}
+.cal-card{background:var(--card);border-radius:15px;padding:16px;box-shadow:0 2px 9px rgba(0,0,0,.05);border-top:4px solid var(--leaf)}
+body.dark .cal-card{background:var(--card)}
+.cal-title{font-weight:700;font-size:14px;color:var(--earth);margin-bottom:3px}
+body.dark .cal-title{color:#c8e0a8}
+.cal-done-btn{margin-top:9px;background:var(--stat-bg,#f5f2ea);border:none;border-radius:9px;padding:5px 11px;font-size:11px;cursor:pointer;color:var(--muted);font-family:'DM Sans',sans-serif;font-weight:600}
+.cal-done-btn:hover{background:#e0f0d0;color:var(--forest)}
+
+/* EXPORT BAR */
+.export-bar{display:flex;gap:9px;margin-bottom:18px;flex-wrap:wrap}
+
+/* FOOTER */
+footer{text-align:center;padding:32px 16px;color:var(--sub);font-size:12px;border-top:1px solid var(--card-border);position:relative;z-index:1}
+
+@media(max-width:600px){.g2,.g3{grid-template-columns:1fr}.species-grid{grid-template-columns:1fr 1fr}.feat{flex-direction:column;text-align:center}.gal-grid{grid-template-columns:1fr 1fr}}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="ldr-turtle">🐢</div>
+  <div style="font-family:'Playfair Display',serif;font-size:26px;color:white;margin-top:18px">Korytnačka stepná</div>
+  <div style="font-size:12px;color:rgba(255,255,255,.5);margin-top:6px;letter-spacing:2px;text-transform:uppercase">Načítavam...</div>
+  <div class="ldr-bar"><div class="ldr-fill"></div></div>
+</div>
+
+<!-- NOTIFY -->
+<div id="notify">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px">
+    <div><div style="font-weight:700;margin-bottom:3px;font-size:14px" id="ntitle">🐢 Pripomienka</div><div style="font-size:12px;opacity:.85" id="nmsg"></div></div>
+    <button onclick="closeNotify()" style="background:rgba(255,255,255,.2);border:none;border-radius:7px;color:white;padding:3px 7px;cursor:pointer;font-size:11px;flex-shrink:0">✕</button>
+  </div>
+</div>
+
+<!-- HERO -->
+<div class="hero">
+  <button onclick="toggleDark()" id="dark-btn">🌙</button>
+  <span class="hero-badge">🌿 Slovenský sprievodca</span>
+  <span class="hero-turtle">🐢</span>
+  <h1>Korytnačka<em>Stepná</em></h1>
+  <p><em style="color:var(--shell);font-style:normal;font-weight:600">Testudo horsfieldii</em> — najobľúbenejšia domáca korytnačka. Spoznaj jej svet, starostlivosť a sleduj jej rast.</p>
+  <div class="cbox">
+    <div id="cdisplay" style="display:none">
+      <div style="font-size:10px;color:rgba(255,255,255,.5);letter-spacing:2px;text-transform:uppercase;margin-bottom:3px">Som s tebou už</div>
+      <div id="days-count">0</div>
+      <div style="font-size:12px;color:rgba(255,255,255,.6);margin-top:2px">dní 🐢</div>
+      <button onclick="resetCounter()" style="margin-top:7px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.6);border-radius:20px;padding:3px 11px;font-size:10px;cursor:pointer;font-family:'DM Sans',sans-serif">Zmeniť dátum</button>
+    </div>
+    <div id="csetup">
+      <div style="font-size:12px;color:rgba(255,255,255,.65);margin-bottom:9px">📅 Kedy si dostala korytnačku?</div>
+      <div style="display:flex;gap:7px;align-items:center;justify-content:center;flex-wrap:wrap">
+        <input type="date" id="turtle-since" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:9px;padding:7px 11px;color:white;font-family:'DM Sans',sans-serif;font-size:12px;outline:none">
+        <button onclick="saveCounter()" style="background:var(--shell);border:none;border-radius:9px;padding:7px 14px;color:#2a1a00;font-weight:700;font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif">Nastaviť</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="nav-tabs">
+  <button class="tab-btn active" onclick="showTab('druhy',this)">🦎 Druhy</button>
+  <button class="tab-btn" onclick="showTab('galeria',this)">🖼️ Galéria</button>
+  <button class="tab-btn" onclick="showTab('care',this)">❤️ Starostlivosť</button>
+  <button class="tab-btn" onclick="showTab('kalendar',this)">📅 Kalendár</button>
+  <button class="tab-btn" onclick="showTab('kviz',this)">🎯 Kvíz</button>
+  <button class="tab-btn" onclick="showTab('denik',this)">📓 Denník</button>
+  <button class="tab-btn" onclick="showTab('zdravie',this)">🏥 Zdravie</button>
+  <button class="tab-btn" onclick="showTab('faq',this)">❓ FAQ</button>
+</div>
+
+<!-- DRUHY -->
+<div id="sec-druhy" class="section active">
+  <div class="section-title">Druhy korytnačiek</div>
+  <div class="section-sub">Klikni na druh pre detailné informácie</div>
+  <div class="feat" onclick="openModal(6)">
+    <div style="font-size:78px;flex-shrink:0;filter:drop-shadow(0 6px 14px rgba(0,0,0,.3))">🐢</div>
+    <div>
+      <div style="font-size:10px;color:rgba(255,255,255,.55);letter-spacing:3px;text-transform:uppercase;margin-bottom:5px">⭐ Hlavný druh</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;font-weight:900;color:white;line-height:1.1;margin-bottom:3px">Korytnačka stepná</div>
+      <div style="font-size:13px;color:rgba(255,255,255,.65);font-style:italic;margin-bottom:11px">Testudo horsfieldii</div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <span style="background:rgba(255,255,255,.18);color:white;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600">⏳ 40–50 rokov</span>
+        <span style="background:rgba(255,255,255,.18);color:white;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600">📏 13–28 cm</span>
+        <span style="background:rgba(255,255,255,.18);color:white;padding:4px 11px;border-radius:20px;font-size:11px;font-weight:600">🌍 Stredná Ázia</span>
+      </div>
+    </div>
+    <div style="margin-left:auto;color:rgba(255,255,255,.4);font-size:20px;flex-shrink:0">›</div>
+  </div>
+  <div class="species-grid">
+    <div class="species-card" onclick="openModal(0)"><div style="background:linear-gradient(135deg,#e8f4d0,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🌿</span><div class="sp-name">Korytnačka grécka</div><div class="sp-latin">Testudo graeca</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 50–125 r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+    <div class="species-card" onclick="openModal(1)"><div style="background:linear-gradient(135deg,#f4e8c8,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🏝️</span><div class="sp-name">Korytnačka obrovská</div><div class="sp-latin">Aldabrachelys gigantea</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 150+ r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+    <div class="species-card" onclick="openModal(2)"><div style="background:linear-gradient(135deg,#d0e8f4,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🗺️</span><div class="sp-name">Mapová korytnačka</div><div class="sp-latin">Graptemys geographica</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 15–20 r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+    <div class="species-card" onclick="openModal(3)"><div style="background:linear-gradient(135deg,#d0f4e8,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🌊</span><div class="sp-name">Červenouchá želvička</div><div class="sp-latin">Trachemys scripta elegans</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 20–30 r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+    <div class="species-card" onclick="openModal(4)"><div style="background:linear-gradient(135deg,#f4d0d0,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🔴</span><div class="sp-name">Korytnačka floridská</div><div class="sp-latin">Gopherus polyphemus</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 40–60 r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+    <div class="species-card" onclick="openModal(5)"><div style="background:linear-gradient(135deg,#e0d0f4,#f0ece0);padding:26px 18px 18px;text-align:center"><span style="font-size:48px;display:block;margin-bottom:9px">🐠</span><div class="sp-name">Morská korytnačka zelená</div><div class="sp-latin">Chelonia mydas</div></div><div class="sp-foot"><span style="font-size:11px;color:#3d6a28;font-weight:600;background:#e8f4e0;padding:2px 9px;border-radius:20px">⏳ 80+ r.</span><span style="font-size:11px;color:var(--bark)">Detail →</span></div></div>
+  </div>
+</div>
+
+<!-- GALERIA -->
+<div id="sec-galeria" class="section">
+  <div class="section-title">Galéria</div>
+  <div class="section-sub">Pridaj vlastné fotky svojej korytnačky!</div>
+  <div class="gal-grid" id="gallery-grid">
+    <div class="gal-card" style="background:linear-gradient(135deg,#c8a840,#e8c860)"><span style="font-size:50px">☀️</span><span class="gal-label">Slnenie</span></div>
+    <div class="gal-card" style="background:linear-gradient(135deg,#5a9a38,#8ac858)"><span style="font-size:50px">🥬</span><span class="gal-label">Kŕmenie</span></div>
+    <div class="gal-card" style="background:linear-gradient(135deg,#4a8aaa,#5abadd)"><span style="font-size:50px">🌊</span><span class="gal-label">Kúpanie</span></div>
+    <div class="gal-card" style="background:linear-gradient(135deg,#6a5a4a,#9a8a7a)"><span style="font-size:50px">🥚</span><span class="gal-label">Vajíčka</span></div>
+    <div class="gal-card" style="background:linear-gradient(135deg,#2d4a1e,#4a7a2e)"><span style="font-size:50px">🌿</span><span class="gal-label">V tráve</span></div>
+    <div class="gal-card" style="background:linear-gradient(135deg,#aa6a4a,#cc9a70)"><span style="font-size:50px">👶</span><span class="gal-label">Mláďatá</span></div>
+    <div class="gal-upload" onclick="document.getElementById('photo-input').click()">
+      <span style="font-size:32px">📸</span>
+      <p style="color:var(--forest,#3d6a28);font-weight:600;margin-top:7px;font-size:13px">Pridaj svoju fotku</p>
+      <small style="color:var(--muted);font-size:11px">JPG, PNG – viac naraz</small>
+    </div>
+    <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotos(event)">
+  </div>
+</div>
+
+<!-- CARE -->
+<div id="sec-care" class="section">
+  <div class="section-title">Starostlivosť</div>
+  <div class="section-sub">Kompletná príručka pre Testudo horsfieldii</div>
+  <div class="care-grid">
+    <div class="care-card" style="border-left-color:#e05050"><div style="font-size:30px;margin-bottom:9px">☀️</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Svetlo & Teplo</div><span class="pbadge ph">VYSOKÁ</span></div><div class="c-desc">UV-B lampa 10–12 hod/deň. Teplý kút 28–32 °C, chladný 20–22 °C. Bez UV-B korytnačka ochoreje.</div></div>
+    <div class="care-card" style="border-left-color:#e05050"><div style="font-size:30px;margin-bottom:9px">💧</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Kúpanie</div><span class="pbadge ph">VYSOKÁ</span></div><div class="c-desc">2–3× týždenne v teplej vode 28–30 °C, 15–20 minút. Zabraňuje dehydratácii a pomáha tráveniu.</div></div>
+    <div class="care-card" style="border-left-color:#e05050"><div style="font-size:30px;margin-bottom:9px">🏠</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Terrárium</div><span class="pbadge ph">VYSOKÁ</span></div><div class="c-desc">Min. 100×60 cm pre dospelú. Substrát: zmes hliny a piesku 8–12 cm. Ideálne vonkajší výbeh v lete.</div></div>
+    <div class="care-card" style="border-left-color:var(--shell)"><div style="font-size:30px;margin-bottom:9px">🥗</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Kŕmenie</div><span class="pbadge pm">STREDNÁ</span></div><div class="c-desc">Púpava, rukola, ďatelina, kapusta, mrkva. Vápnikový prášok 2× týždenne. Ľadový šalát a ovocie zakázané!</div></div>
+    <div class="care-card" style="border-left-color:var(--shell)"><div style="font-size:30px;margin-bottom:9px">🩺</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Veterinár</div><span class="pbadge pm">STREDNÁ</span></div><div class="c-desc">Ročná preventívna prehliadka. Sleduj zmeny v správaní, strave, vylučovaní. Odčervenie 1× ročne.</div></div>
+    <div class="care-card" style="border-left-color:var(--water)"><div style="font-size:30px;margin-bottom:9px">❄️</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Hibernácia</div><span class="pbadge pl">NÍZKA</span></div><div class="c-desc">Zimuje 3–5 mesiacov pri 4–8 °C. Pred hibernáciou 4 týždne bez jedla. Konzultuj s veterinárom!</div></div>
+    <div class="care-card" style="border-left-color:var(--water)"><div style="font-size:30px;margin-bottom:9px">⚖️</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Meranie rastu</div><span class="pbadge pl">NÍZKA</span></div><div class="c-desc">Váž a mer každý kvartál. Zdravá korytnačka rastie stabilne. Zaznamenaj do Denníka rastu!</div></div>
+    <div class="care-card" style="border-left-color:#8a5aaa"><div style="font-size:30px;margin-bottom:9px">🌡️</div><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px"><div class="c-title">Vlhkosť</div><span class="pbadge" style="background:#f0e0ff;color:#6a2aaa">INFO</span></div><div class="c-desc">Vlhkosť 40–60 %. Stepná korytnačka zvládne suché podmienky, ale extrémna suchota škodí škrupine.</div></div>
+  </div>
+</div>
+
+<!-- KALENDÁR -->
+<div id="sec-kalendar" class="section">
+  <div class="section-title">Kalendár starostlivosti</div>
+  <div class="section-sub">Sleduj kedy si naposledy čo urobila – klikni Hotovo po každej starostlivosti</div>
+  <div class="cal-grid" id="cal-grid"></div>
+</div>
+
+<!-- KVÍZ -->
+<div id="sec-kviz" class="section">
+  <div class="section-title">Kvíz o korytnačkách</div>
+  <div class="section-sub">Otestuj svoje znalosti!</div>
+  <div style="max-width:600px;margin:0 auto">
+    <div id="quiz-main">
+      <div style="height:4px;background:var(--stat-bg,#f5f2ea);border-radius:10px;margin-bottom:26px;overflow:hidden"><div id="qprog" style="height:100%;background:linear-gradient(90deg,var(--leaf),var(--shell));border-radius:10px;transition:width .5s;width:0%"></div></div>
+      <div style="font-family:'Playfair Display',serif;font-size:19px;color:var(--moss);margin-bottom:22px;line-height:1.5;font-weight:700" id="quiz-q"></div>
+      <div id="quiz-opts"></div>
+      <button class="qnext" id="qnext" onclick="nextQ()">Ďalšia otázka →</button>
+    </div>
+    <div class="qscore" id="qscore">
+      <div style="font-size:68px;margin-bottom:13px" id="semoji">🏆</div>
+      <div style="font-family:'Playfair Display',serif;font-size:26px;color:var(--moss);font-weight:900;margin-bottom:7px" id="stitle"></div>
+      <div style="color:var(--muted);font-size:14px;margin-bottom:24px" id="ssub"></div>
+      <div style="max-width:260px;margin:0 auto 24px;background:var(--stat-bg,#f5f2ea);border-radius:9px;height:9px;overflow:hidden"><div id="sfill" style="height:100%;background:linear-gradient(90deg,var(--leaf),var(--shell));border-radius:9px;width:0%;transition:width 1s ease"></div></div>
+      <button class="qrestart" onclick="startQuiz()">🔄 Hrať znova</button>
+    </div>
+  </div>
+</div>
+
+<!-- DENNÍK -->
+<div id="sec-denik" class="section">
+  <div class="section-title">📓 Denník rastu</div>
+  <div class="section-sub">Sleduj váhu, veľkosť a rast svojej korytnačky</div>
+  <div class="card cp" style="margin-bottom:22px">
+    <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--moss);margin-bottom:16px">➕ Nový záznam</div>
+    <div class="fg g2"><div><label class="lbl">Dátum</label><input type="date" id="d-date" class="inp"></div><div><label class="lbl">Kvartál</label><select id="d-quarter" class="inp"><option value="Q1">Q1 – Jar</option><option value="Q2">Q2 – Leto</option><option value="Q3">Q3 – Jeseň</option><option value="Q4">Q4 – Zima</option></select></div></div>
+    <div class="fg g3"><div><label class="lbl">⚖️ Váha (g)</label><input type="number" id="d-weight" placeholder="napr. 320" class="inp"></div><div><label class="lbl">📏 Dĺžka (cm)</label><input type="number" id="d-length" placeholder="12.5" step="0.1" class="inp"></div><div><label class="lbl">📐 Výška (cm)</label><input type="number" id="d-height" placeholder="5.2" step="0.1" class="inp"></div></div>
+    <div style="margin-bottom:16px"><label class="lbl">📝 Poznámky</label><textarea id="d-note" class="inp" rows="2" placeholder="Napr. aktívna, jedla dobre, škrupina v poriadku..."></textarea></div>
+    <button class="btn-p" onclick="saveEntry()">💾 Uložiť záznam</button>
+  </div>
+  <div class="card cp" id="chart-container" style="margin-bottom:22px;display:none">
+    <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--moss);margin-bottom:3px">📈 Graf rastu</div>
+    <div style="font-size:12px;color:var(--sub);margin-bottom:13px">Vizuálny vývoj meraní v čase</div>
+    <div class="chart-btns">
+      <button class="cbtn active" id="btn-weight" onclick="setChartType('weight')">⚖️ Váha</button>
+      <button class="cbtn" id="btn-length" onclick="setChartType('length')">📏 Dĺžka</button>
+      <button class="cbtn" id="btn-height" onclick="setChartType('height')">📐 Výška</button>
+    </div>
+    <canvas id="growthChart" height="200"></canvas>
+  </div>
+  <div class="export-bar">
+    <button class="btn-s" onclick="exportCSV()">📊 Export CSV</button>
+    <button class="btn-s" onclick="exportPrint()">🖨️ Tlačiť / PDF</button>
+  </div>
+  <div class="sbar"><input type="text" class="inp" id="d-search" placeholder="🔍 Hľadaj v poznámkach..." oninput="renderEntries()" style="flex:1"></div>
+  <div class="chips">
+    <div class="chip active" onclick="setFilter('all',this)">Všetky</div>
+    <div class="chip" onclick="setFilter('Q1',this)">🌱 Q1</div>
+    <div class="chip" onclick="setFilter('Q2',this)">☀️ Q2</div>
+    <div class="chip" onclick="setFilter('Q3',this)">🍂 Q3</div>
+    <div class="chip" onclick="setFilter('Q4',this)">❄️ Q4</div>
+  </div>
+  <div id="denik-entries"></div>
+</div>
+
+<!-- ZDRAVIE -->
+<div id="sec-zdravie" class="section">
+  <div class="section-title">🏥 Zdravotný denník</div>
+  <div class="section-sub">Záznamy z veterinára, lieky a zdravotné udalosti</div>
+  <div class="card cp" style="margin-bottom:22px">
+    <div style="font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--moss);margin-bottom:16px">➕ Nový zdravotný záznam</div>
+    <div class="fg g2"><div><label class="lbl">Dátum</label><input type="date" id="v-date" class="inp"></div><div><label class="lbl">Typ záznamu</label><select id="v-type" class="inp"><option value="vet">🩺 Návšteva veterinára</option><option value="liek">💊 Liek / liečba</option><option value="odcervenie">💉 Odčervenie</option><option value="problem">⚠️ Zdravotný problém</option><option value="ok">✅ Bežná kontrola</option></select></div></div>
+    <div style="margin-bottom:13px"><label class="lbl">Veterinár / miesto</label><input type="text" id="v-vet" class="inp" placeholder="napr. MVDr. Novák, Bratislava"></div>
+    <div class="fg g2"><div><label class="lbl">Diagnóza / dôvod</label><input type="text" id="v-diag" class="inp" placeholder="napr. Preventívna prehliadka"></div><div><label class="lbl">Cena (€)</label><input type="number" id="v-cost" class="inp" placeholder="35"></div></div>
+    <div style="margin-bottom:16px"><label class="lbl">Poznámky / odporúčania</label><textarea id="v-note" class="inp" rows="2" placeholder="napr. Predpísané vitamíny, kontrola za 3 mesiace..."></textarea></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:9px">
+      <button class="btn-p" style="background:linear-gradient(135deg,#2a5a8a,#3a8aaa)" onclick="saveVetEntry()">💾 Uložiť záznam</button>
+      <div id="vet-total" style="font-size:13px;color:var(--muted);font-weight:600"></div>
+    </div>
+  </div>
+  <div class="export-bar"><button class="btn-s" onclick="exportVetCSV()">📊 Export CSV</button></div>
+  <div id="vet-entries"></div>
+</div>
+
+<!-- FAQ -->
+<div id="sec-faq" class="section">
+  <div class="section-title">❓ Časté otázky</div>
+  <div class="section-sub">Odpovede na najčastejšie otázky chovateľov</div>
+  <div class="faq-cat">🌙 Hibernácia</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Musí korytnačka stepná hibernovať?<span class="arrow">▼</span></div><div class="faq-a"><p>Áno, Testudo horsfieldii má prirodzený zimný spánok 3–5 mesiacov. Bez hibernácie sa skracuje jej dĺžka života a zvyšuje riziko chorôb. Hibernácia prebieha pri 4–8 °C.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Ako pripraviť korytnačku na hibernáciu?<span class="arrow">▼</span></div><div class="faq-a"><p>4 týždne pred hibernáciou prestať kŕmiť, pokračovať v kúpaní. Teplota sa pomaly znižuje. Korytnačka sa uloží do škatule s vlhkým substrátom a prenesie na chladné miesto 4–8 °C.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Ako dlho trvá hibernácia?<span class="arrow">▼</span></div><div class="faq-a"><p>Zvyčajne 3–5 mesiacov (október–február). Závisí od teploty a zdravotného stavu. Korytnačku kontroluj každé 2 týždne – nesmie schudnúť viac ako 10 % váhy.</p></div></div>
+  <div class="faq-cat">🥗 Kŕmenie</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Čo môže korytnačka stepná jesť?<span class="arrow">▼</span></div><div class="faq-a"><p>Vhodné: púpava (celá), ďatelina, rukola, endívia, kapusta, mrkva, seno. Vápnikový doplnok 2× týždenne. Zakázané: ľadový šalát, ovocie, špenát, mäso, mliečne výrobky.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Ako často kŕmiť?<span class="arrow">▼</span></div><div class="faq-a"><p>Dospelé 5× týždenne, mláďatá denne. Množstvo: čo zjedia za 20–30 minút. V zime (hibernácia) sa nekŕmi vôbec.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Prečo nesmie jesť ovocie?<span class="arrow">▼</span></div><div class="faq-a"><p>Testudo horsfieldii je stepná korytnačka bez prístupu k ovociu v prírode. Cukor narúša črevnú flóru a môže spôsobiť vážne tráviace problémy.</p></div></div>
+  <div class="faq-cat">🩺 Zdravie & Veterinár</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Kedy ísť k veterinárovi?<span class="arrow">▼</span></div><div class="faq-a"><p>Okamžite: nezáujem o jedlo dlhšie ako 2 týždne, výtok z nosa/úst, opuchnuté oči, neaktivita. Preventívne: raz ročne. Vždy hľadaj špecialistu na plazy (herpetveterinár).</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Čo je metabolická kostná choroba (MBD)?<span class="arrow">▼</span></div><div class="faq-a"><p>MBD vzniká nedostatkom vápnika a UV-B žiarenia. Prejavuje sa mäkkou škrupinou a deformáciami. Prevencia: správna UV-B lampa a vápnikový doplnok.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Ako často odčervovať?<span class="arrow">▼</span></div><div class="faq-a"><p>Odčervenie 1× ročne, ideálne na jar po hibernácii. Vždy na základe výsledku parazitologického vyšetrenia u veterinára. Neodčervuj preventívne bez diagnózy.</p></div></div>
+  <div class="faq-cat">🏠 Prostredie</div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Je lepší vonkajší výbeh alebo terrárium?<span class="arrow">▼</span></div><div class="faq-a"><p>V lete (jún–september) vonkajší výbeh – prirodzené UV, pohyb, čerstvý vzduch. Pri nízkych teplotách (pod 15 °C) terrárium s UV-B lampou. Kombinácia oboch je najlepšia.</p></div></div>
+  <div class="faq-item"><div class="faq-q" onclick="toggleFaq(this)">Aký substrát je najlepší?<span class="arrow">▼</span></div><div class="faq-a"><p>Zmes záhradnej hliny a piesku (70:30). Hĺbka min. 10 cm – korytnačka stepná miluje kopanie. Nevhodné: ihličnanové štiepky, novinový papier, dlaždice.</p></div></div>
+</div>
+
+<!-- MODAL -->
+<div class="modal-ov" id="modal" onclick="closeModalOut(event)">
+  <div class="modal">
+    <div id="mhead" style="padding:32px 24px 20px;text-align:center;position:relative">
+      <button class="m-close" onclick="closeModal()">✕</button>
+      <span style="font-size:62px;display:block;margin-bottom:9px" id="memoji">🐢</span>
+      <div style="font-family:'Playfair Display',serif;font-size:20px;font-weight:700;color:var(--moss);margin-bottom:3px" id="mtitle"></div>
+      <div style="font-size:12px;color:var(--muted);font-style:italic" id="mlatin"></div>
+    </div>
+    <div style="padding:0 20px 22px" id="mbody"></div>
+  </div>
+</div>
+
+<footer>🐢 Korytnačka stepná &nbsp;·&nbsp; Testudo horsfieldii &nbsp;·&nbsp; 2025</footer>
+
+<script>
+const SPECIES=[
+  {e:"🌿",n:"Korytnačka grécka",l:"Testudo graeca",h:"Stredomorské oblasti, Severná Afrika",life:"50–125 rokov",s:"20–30 cm",w:"0.8–3.5 kg",d:"Byliny, kvety, zelenina",bg:"linear-gradient(135deg,#e8f4d0,#f0ece0)"},
+  {e:"🏝️",n:"Korytnačka obrovská",l:"Aldabrachelys gigantea",h:"Aldabra atoly, Seychely",life:"150+ rokov",s:"100–120 cm",w:"250 kg",d:"Tráva, listy, ovocie, kaktusy",bg:"linear-gradient(135deg,#f4e8c8,#f0ece0)"},
+  {e:"🗺️",n:"Mapová korytnačka",l:"Graptemys geographica",h:"Severná Amerika, rieky a jazerá",life:"15–20 rokov",s:"10–27 cm",w:"0.3–2 kg",d:"Hmyz, mäkkýše, vodné rastliny",bg:"linear-gradient(135deg,#d0e8f4,#f0ece0)"},
+  {e:"🌊",n:"Červenouchá želvička",l:"Trachemys scripta elegans",h:"Severná Amerika, teplé vody",life:"20–30 rokov",s:"18–30 cm",w:"0.5–3 kg",d:"Ryby, hmyz, vodné rastliny",bg:"linear-gradient(135deg,#d0f4e8,#f0ece0)"},
+  {e:"🔴",n:"Korytnačka floridská",l:"Gopherus polyphemus",h:"Juhovýchod USA, piesočnaté oblasti",life:"40–60 rokov",s:"20–38 cm",w:"2–6 kg",d:"Tráva, listy, bobule, kaktusy",bg:"linear-gradient(135deg,#f4d0d0,#f0ece0)"},
+  {e:"🐠",n:"Morská korytnačka zelená",l:"Chelonia mydas",h:"Tropické a subtropické oceány",life:"80+ rokov",s:"80–150 cm",w:"70–190 kg",d:"Morské riasy, morská tráva",bg:"linear-gradient(135deg,#e0d0f4,#f0ece0)"},
+  {e:"🐢",n:"Korytnačka stepná",l:"Testudo horsfieldii",h:"Stredná Ázia – Uzbekistan, Afganistan, Irán, Pakistan",life:"40–50 rokov",s:"13–28 cm",w:"0.5–2 kg",d:"Byliny, púpava, ďatelina, seno, zelenina",bg:"linear-gradient(135deg,#e8f0d0,#f5eed8)"},
+];
+
+const QUIZ=[
+  {q:"Ako sa volá po latinsky korytnačka stepná?",o:["Testudo graeca","Testudo horsfieldii","Testudo hermanni","Testudo marginata"],c:1},
+  {q:"Z ktorej oblasti pochádza korytnačka stepná?",o:["Stredomorie","Amazónia","Stredná Ázia","Subsaharská Afrika"],c:2},
+  {q:"Koľko hodín denne musí svietiť UV-B lampa?",o:["4–6 hodín","10–12 hodín","24 hodín","2–3 hodiny"],c:1},
+  {q:"Ktorá potravina je pre korytnačku ZAKÁZANÁ?",o:["Mrkva","Ľadový šalát","Púpava","Rukola"],c:1},
+  {q:"Ako dlho žije korytnačka stepná?",o:["5–10 rokov","40–50 rokov","150+ rokov","10–15 rokov"],c:1},
+  {q:"Aká teplota je správna počas hibernácie?",o:["Teplo 30 °C","4–8 °C","15–20 °C","Ľubovoľná"],c:1},
+  {q:"Aký minimálny rozmer terária pre dospelú?",o:["50×30 cm","100×60 cm","200×100 cm","60×40 cm"],c:1},
+  {q:"Koľko mesiacov trvá hibernácia Testudo horsfieldii?",o:["1–2 mesiace","3–5 mesiacov","6–8 mesiacov","Nehibernuje"],c:1},
+];
+
+const CAL=[
+  {i:"💧",t:"Kúpanie",f:"2–3× týždenne",d:3,c:"#4a8aaa"},
+  {i:"🥗",t:"Kŕmenie",f:"5× týždenne",d:1,c:"#5a9a38"},
+  {i:"⚖️",t:"Váženie",f:"1× kvartál",d:90,c:"#c8a85a"},
+  {i:"☀️",t:"Kontrola UV lampy",f:"1× mesačne",d:30,c:"#e8a030"},
+  {i:"🩺",t:"Veterinár",f:"1× ročne",d:365,c:"#e05050"},
+  {i:"💉",t:"Odčervenie",f:"1× ročne",d:365,c:"#8a5aaa"},
+  {i:"🧹",t:"Upratovanie terária",f:"1× týždenne",d:7,c:"#6a8a5a"},
+  {i:"📏",t:"Meranie dĺžky",f:"1× kvartál",d:90,c:"#3a6aaa"},
+];
+
+// LOADER
+window.addEventListener('load',()=>{setTimeout(()=>{const l=document.getElementById('loader');l.classList.add('gone');setTimeout(()=>l.remove(),700);},1900);});
+
+// DARK MODE
+function toggleDark(){
+  document.body.classList.toggle('dark');
+  const d=document.body.classList.contains('dark');
+  document.getElementById('dark-btn').textContent=d?'☀️':'🌙';
+  localStorage.setItem('td',d?'1':'');
+  if(gChart){gChart.destroy();gChart=null;renderChart();}
+}
+if(localStorage.getItem('td')){document.body.classList.add('dark');document.getElementById('dark-btn').textContent='☀️';}
+
+// TABS
+function showTab(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('sec-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='kviz')startQuiz();
+  if(id==='denik'){renderEntries();renderChart();}
+  if(id==='zdravie')renderVet();
+  if(id==='kalendar')renderCal();
+}
+
+// MODAL
+function openModal(i){
+  const s=SPECIES[i];
+  document.getElementById('memoji').textContent=s.e;
+  document.getElementById('mtitle').textContent=s.n;
+  document.getElementById('mlatin').textContent=s.l;
+  document.getElementById('mhead').style.background=s.bg;
+  document.getElementById('mbody').innerHTML=[['🌍 Biotop',s.h],['⏳ Dĺžka života',s.life],['📏 Veľkosť',s.s],['⚖️ Hmotnosť',s.w],['🥗 Strava',s.d]]
+    .map(([l,v])=>`<div class="irow"><span class="irow-label">${l}</span><span class="irow-val">${v}</span></div>`).join('');
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal(){document.getElementById('modal').classList.remove('open');}
+function closeModalOut(e){if(e.target===document.getElementById('modal'))closeModal();}
+
+// GALLERY
+function handlePhotos(e){
+  Array.from(e.target.files).forEach(f=>{
+    const r=new FileReader();
+    r.onload=ev=>{const p=JSON.parse(localStorage.getItem('tp')||'[]');p.push(ev.target.result);localStorage.setItem('tp',JSON.stringify(p));renderPhotos();};
+    r.readAsDataURL(f);
+  });
+}
+function renderPhotos(){
+  const grid=document.getElementById('gallery-grid');
+  const ph=JSON.parse(localStorage.getItem('tp')||'[]');
+  grid.querySelectorAll('.user-pw').forEach(e=>e.remove());
+  const upload=grid.querySelector('.gal-upload');
+  ph.forEach((src,i)=>{
+    const w=document.createElement('div');
+    w.className='user-pw gal-card';w.style.padding='0';
+    w.innerHTML=`<img src="${src}" alt="Moja korytnačka" style="border-radius:16px"><button class="pdel" onclick="delPhoto(${i})">✕</button>`;
+    grid.insertBefore(w,upload);
+  });
+}
+function delPhoto(i){const p=JSON.parse(localStorage.getItem('tp')||'[]');p.splice(i,1);localStorage.setItem('tp',JSON.stringify(p));renderPhotos();}
+
+// COUNTER
+function saveCounter(){const v=document.getElementById('turtle-since').value;if(!v)return;localStorage.setItem('ts',v);updateCounter();}
+function resetCounter(){localStorage.removeItem('ts');document.getElementById('cdisplay').style.display='none';document.getElementById('csetup').style.display='block';}
+function updateCounter(){
+  const s=localStorage.getItem('ts');if(!s)return;
+  const days=Math.floor((Date.now()-new Date(s))/86400000);
+  document.getElementById('days-count').textContent=days;
+  document.getElementById('cdisplay').style.display='block';
+  document.getElementById('csetup').style.display='none';
+}
+updateCounter();
+
+// NOTIFY
+function notify(title,msg){
+  document.getElementById('ntitle').textContent=title;
+  document.getElementById('nmsg').textContent=msg;
+  const b=document.getElementById('notify');b.style.display='block';
+  clearTimeout(window._nt);window._nt=setTimeout(()=>b.style.display='none',6000);
+}
+function closeNotify(){document.getElementById('notify').style.display='none';}
+function checkNotify(){
+  const last=localStorage.getItem('tlast');
+  if(!last){notify('📓 Tip','Nezabudni pravidelne merať svoju korytnačku!');return;}
+  const days=Math.floor((Date.now()-new Date(last))/86400000);
+  if(days>=88)notify('⚖️ Čas na meranie!',`Posledné meranie bolo pred ${days} dňami. Čas na kvartálne meranie!`);
+}
+
+// QUIZ
+let cQ=0,qs=0,qa=false;
+function startQuiz(){cQ=0;qs=0;qa=false;document.getElementById('quiz-main').style.display='block';document.getElementById('qscore').classList.remove('vis');renderQ();}
+function renderQ(){
+  const q=QUIZ[cQ];
+  document.getElementById('qprog').style.width=(cQ/QUIZ.length*100)+'%';
+  document.getElementById('quiz-q').textContent=`${cQ+1}/${QUIZ.length} — ${q.q}`;
+  document.getElementById('qnext').classList.remove('vis');qa=false;
+  document.getElementById('quiz-opts').innerHTML=q.o.map((o,i)=>`<button class="qopt" onclick="ansQ(${i})">${o}</button>`).join('');
+}
+function ansQ(i){
+  if(qa)return;qa=true;
+  const q=QUIZ[cQ],btns=document.querySelectorAll('.qopt');
+  btns.forEach(b=>b.disabled=true);
+  btns[q.c].classList.add('correct');
+  if(i!==q.c)btns[i].classList.add('wrong');else qs++;
+  const nb=document.getElementById('qnext');
+  nb.textContent=cQ+1>=QUIZ.length?'🏁 Zobraziť výsledok':'Ďalšia otázka →';
+  nb.classList.add('vis');
+}
+function nextQ(){
+  cQ++;
+  if(cQ>=QUIZ.length){
+    document.getElementById('quiz-main').style.display='none';
+    const pct=Math.round(qs/QUIZ.length*100);
+    document.getElementById('qscore').classList.add('vis');
+    document.getElementById('semoji').textContent=qs===QUIZ.length?'🏆':qs>=6?'🌟':qs>=4?'🐢':'😅';
+    document.getElementById('stitle').textContent=`${qs} / ${QUIZ.length} správnych`;
+    document.getElementById('ssub').textContent=qs===QUIZ.length?'Perfektné! Si skutočný expert!':qs>=6?'Skvelá práca!':qs>=4?'Dobrý pokus, uč sa ďalej!':'Prečítaj si FAQ a skús znova!';
+    setTimeout(()=>document.getElementById('sfill').style.width=pct+'%',200);
+  }else renderQ();
+}
+
+// DENNÍK
+let dFilter='all';
+function getE(){return JSON.parse(localStorage.getItem('tde')||'[]');}
+function saveE(a){localStorage.setItem('tde',JSON.stringify(a));}
+function saveEntry(){
+  const date=document.getElementById('d-date').value,quarter=document.getElementById('d-quarter').value,
+        weight=document.getElementById('d-weight').value,length=document.getElementById('d-length').value,
+        height=document.getElementById('d-height').value,note=document.getElementById('d-note').value.trim();
+  if(!weight&&!length&&!height&&!note){alert('Vyplň aspoň jedno meranie!');return;}
+  const entries=getE();entries.unshift({id:Date.now(),date,quarter,weight,length,height,note});
+  saveE(entries);if(date)localStorage.setItem('tlast',date);
+  document.getElementById('d-date').valueAsDate=new Date();
+  ['d-weight','d-length','d-height','d-note'].forEach(id=>document.getElementById(id).value='');
+  renderEntries();renderChart();notify('✅ Záznam uložený!','Nové meranie bolo pridané do denníka.');
+}
+function delEntry(id){if(!confirm('Zmazať?'))return;saveE(getE().filter(e=>e.id!==id));renderEntries();renderChart();}
+function setFilter(f,el){dFilter=f;document.querySelectorAll('.chip').forEach(c=>c.classList.remove('active'));el.classList.add('active');renderEntries();}
+function renderEntries(){
+  const search=(document.getElementById('d-search')?.value||'').toLowerCase();
+  let entries=getE();
+  if(dFilter!=='all')entries=entries.filter(e=>e.quarter===dFilter);
+  if(search)entries=entries.filter(e=>(e.note||'').toLowerCase().includes(search));
+  const el=document.getElementById('denik-entries');if(!el)return;
+  const qC={Q1:'#5a9a38',Q2:'#c8a840',Q3:'#cc7a30',Q4:'#4a8aaa'};
+  if(!entries.length){el.innerHTML='<div class="empty"><div>🐢</div><p>Žiadne záznamy nenájdené.</p></div>';return;}
+  el.innerHTML=entries.map(e=>`
+    <div class="ecard" style="border-left-color:${qC[e.quarter]||'var(--leaf)'}">
+      <button class="edel" onclick="delEntry(${e.id})">🗑</button>
+      <div><span class="eq" style="background:${qC[e.quarter]||'var(--moss)'}">${e.quarter}</span>${e.date?`<span class="edate">${new Date(e.date).toLocaleDateString('sk-SK',{day:'numeric',month:'long',year:'numeric'})}</span>`:''}</div>
+      <div class="estats">${e.weight?`<div class="estat">⚖️ ${e.weight} g</div>`:''  }${e.length?`<div class="estat">📏 ${e.length} cm</div>`:''  }${e.height?`<div class="estat">📐 ${e.height} cm</div>`:''}</div>
+      ${e.note?`<div class="enote">"${e.note}"</div>`:''}
+    </div>`).join('');
+}
+
+// EXPORT
+function exportCSV(){
+  const entries=getE();if(!entries.length){alert('Žiadne záznamy.');return;}
+  const rows=[['Dátum','Kvartál','Váha (g)','Dĺžka (cm)','Výška (cm)','Poznámky']];
+  entries.forEach(e=>rows.push([e.date,e.quarter,e.weight,e.length,e.height,`"${(e.note||'').replace(/"/g,'""')}"`]));
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));a.download='denik.csv';a.click();
+}
+function exportVetCSV(){
+  const entries=getV();if(!entries.length){alert('Žiadne záznamy.');return;}
+  const rows=[['Dátum','Typ','Veterinár','Diagnóza','Cena €','Poznámky']];
+  entries.forEach(e=>rows.push([e.date,e.type,e.vet,e.diag,e.cost,`"${(e.note||'').replace(/"/g,'""')}"`]));
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,\uFEFF'+encodeURIComponent(rows.map(r=>r.join(',')).join('\n'));a.download='zdravie.csv';a.click();
+}
+function exportPrint(){
+  const entries=getE();if(!entries.length){alert('Žiadne záznamy.');return;}
+  const html=`<html><head><title>Denník rastu</title><style>body{font-family:sans-serif;padding:28px;max-width:680px;margin:auto}h1{color:#2d4a1e}table{width:100%;border-collapse:collapse;margin-top:18px}th{background:#2d4a1e;color:white;padding:9px 11px;text-align:left;font-size:12px}td{padding:8px 11px;border-bottom:1px solid #eee;font-size:12px}tr:nth-child(even){background:#f8f5ef}</style></head><body><h1>🐢 Denník rastu — Korytnačka stepná</h1><p style="color:#888;font-size:12px">Testudo horsfieldii · ${new Date().toLocaleDateString('sk-SK')}</p><table><tr><th>Dátum</th><th>Kvartál</th><th>Váha (g)</th><th>Dĺžka (cm)</th><th>Výška (cm)</th><th>Poznámky</th></tr>${entries.map(e=>`<tr><td>${e.date||'-'}</td><td>${e.quarter}</td><td>${e.weight||'-'}</td><td>${e.length||'-'}</td><td>${e.height||'-'}</td><td>${e.note||'-'}</td></tr>`).join('')}</table></body></html>`;
+  const w=window.open('','_blank');w.document.write(html);w.document.close();w.print();
+}
+
+// CHART
+let gChart=null,cType='weight';
+const CCFG={weight:{l:'Váha (g)',c:'#5a9a38'},length:{l:'Dĺžka (cm)',c:'#c8a840'},height:{l:'Výška (cm)',c:'#4a8aaa'}};
+function setChartType(t){
+  cType=t;
+  document.querySelectorAll('.cbtn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('btn-'+t).classList.add('active');
+  if(gChart){gChart.destroy();gChart=null;}renderChart();
+}
+function renderChart(){
+  const entries=getE().filter(e=>e.date&&e[cType]).reverse();
+  const cont=document.getElementById('chart-container');
+  if(!entries.length){cont.style.display='none';return;}
+  cont.style.display='block';
+  const dark=document.body.classList.contains('dark');
+  const gc=dark?'#253018':'#f0ede6',tc=dark?'#5a7a48':'#aaa';
+  const cfg=CCFG[cType];
+  if(gChart)gChart.destroy();
+  gChart=new Chart(document.getElementById('growthChart'),{
+    type:'line',
+    data:{labels:entries.map(e=>new Date(e.date).toLocaleDateString('sk-SK',{month:'short',year:'2-digit'})),
+      datasets:[{label:cfg.l,data:entries.map(e=>parseFloat(e[cType])),borderColor:cfg.c,backgroundColor:cfg.c+'22',borderWidth:3,pointRadius:6,pointBackgroundColor:cfg.c,pointBorderColor:dark?'#131d0d':'white',pointBorderWidth:2,tension:.4,fill:true}]},
+    options:{responsive:true,plugins:{legend:{display:false},tooltip:{backgroundColor:dark?'#1c2a12':'#2d4a1e',titleColor:'#a8d888',bodyColor:'#d4e8b8',padding:11,cornerRadius:9}},scales:{x:{grid:{color:gc},ticks:{color:tc,font:{family:'DM Sans'}}},y:{grid:{color:gc},ticks:{color:tc,font:{family:'DM Sans'}},beginAtZero:false}}}
+  });
+}
+
+// KALENDÁR
+function renderCal(){
+  const grid=document.getElementById('cal-grid');
+  const cd=JSON.parse(localStorage.getItem('tcal')||'{}');
+  grid.innerHTML=CAL.map((t,i)=>{
+    const last=cd[i];let next='Nastaviť dátum',od=false;
+    if(last){const ds=Math.floor((Date.now()-new Date(last))/86400000),rem=t.d-ds;
+      if(rem<=0){next=`⚠️ ${Math.abs(rem)}d po termíne`;od=true;}else next=`Za ${rem} dní`;}
+    return `<div class="cal-card" style="border-top-color:${t.c}">
+      <div style="font-size:28px;margin-bottom:7px">${t.i}</div>
+      <div class="cal-title">${t.t}</div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:8px">${t.f}</div>
+      <span style="font-size:11px;font-weight:600;padding:3px 9px;border-radius:20px;${od?'background:#fde8e8;color:#c0392b':'background:#e8f4e0;color:#2d6a28'}">${next}</span>
+      <br><button class="cal-done-btn" onclick="calDone(${i})">✓ Hotovo dnes</button>
+    </div>`;
+  }).join('');
+}
+function calDone(i){
+  const cd=JSON.parse(localStorage.getItem('tcal')||'{}');cd[i]=new Date().toISOString().split('T')[0];
+  localStorage.setItem('tcal',JSON.stringify(cd));renderCal();notify('✅ '+CAL[i].t,'Zaznamenaný ako hotový!');
+}
+
+// VET
+function getV(){return JSON.parse(localStorage.getItem('tvet')||'[]');}
+function saveV(a){localStorage.setItem('tvet',JSON.stringify(a));}
+function saveVetEntry(){
+  const date=document.getElementById('v-date').value,type=document.getElementById('v-type').value,
+        vet=document.getElementById('v-vet').value.trim(),diag=document.getElementById('v-diag').value.trim(),
+        cost=document.getElementById('v-cost').value,note=document.getElementById('v-note').value.trim();
+  if(!date&&!diag&&!note){alert('Vyplň aspoň dátum a dôvod!');return;}
+  const entries=getV();entries.unshift({id:Date.now(),date,type,vet,diag,cost,note});
+  saveV(entries);renderVet();
+  document.getElementById('v-date').valueAsDate=new Date();
+  ['v-vet','v-diag','v-cost','v-note'].forEach(id=>document.getElementById(id).value='');
+  notify('🏥 Záznam uložený!','Zdravotný záznam bol pridaný.');
+}
+function delVet(id){if(!confirm('Zmazať?'))return;saveV(getV().filter(e=>e.id!==id));renderVet();}
+function renderVet(){
+  const entries=getV(),el=document.getElementById('vet-entries');
+  const TM={vet:{i:'🩺',l:'Veterinár',c:'#3a8aaa',bg:'#dceeff'},liek:{i:'💊',l:'Liek',c:'#8a3aaa',bg:'#eedcff'},odcervenie:{i:'💉',l:'Odčervenie',c:'#aa8a3a',bg:'#fff3dc'},problem:{i:'⚠️',l:'Problém',c:'#c0392b',bg:'#fde8e8'},ok:{i:'✅',l:'Kontrola',c:'#2d8a4a',bg:'#dcffe8'}};
+  const total=entries.reduce((s,e)=>s+(parseFloat(e.cost)||0),0);
+  document.getElementById('vet-total').textContent=total>0?`Celkové náklady: ${total.toFixed(2)} €`:'';
+  if(!entries.length){el.innerHTML='<div class="empty"><div>🩺</div><p>Zatiaľ žiadne záznamy.</p></div>';return;}
+  el.innerHTML=entries.map(e=>{const t=TM[e.type]||TM.ok;return `
+    <div class="ecard" style="border-left-color:${t.c}">
+      <button class="edel" onclick="delVet(${e.id})">🗑</button>
+      <div style="display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap">
+        <span style="background:${t.bg};color:${t.c};font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px">${t.i} ${t.l}</span>
+        ${e.date?`<span class="edate">${new Date(e.date).toLocaleDateString('sk-SK',{day:'numeric',month:'long',year:'numeric'})}</span>`:''}
+        ${e.cost?`<span style="margin-left:auto;font-size:13px;font-weight:700;color:${t.c}">${parseFloat(e.cost).toFixed(2)} €</span>`:''}
+      </div>
+      ${e.diag?`<div style="font-weight:600;font-size:14px;color:var(--earth);margin-bottom:3px">${e.diag}</div>`:''}
+      ${e.vet?`<div style="font-size:11px;color:var(--muted);margin-bottom:7px">📍 ${e.vet}</div>`:''}
+      ${e.note?`<div class="enote">"${e.note}"</div>`:''}
+    </div>`;}).join('');
+}
+
+// FAQ
+function toggleFaq(el){
+  const item=el.closest('.faq-item'),was=item.classList.contains('open');
+  document.querySelectorAll('.faq-item').forEach(f=>f.classList.remove('open'));
+  if(!was)item.classList.add('open');
+}
+
+// INIT
+window.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('d-date').valueAsDate=new Date();
+  document.getElementById('v-date').valueAsDate=new Date();
+  renderEntries();renderVet();renderCal();renderPhotos();
+  startQuiz();
+  setTimeout(checkNotify,2800);
+});
+</script>
+</body>
+</html>
